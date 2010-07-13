@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<title>commonjs test page</title>
+<script src="js/commonjs.js"></script>
+<script>
+var Deferred = require('deferred').Deferred;
+var ajax = require('ajax').ajax;
+var hitch = require('hitch').hitch;
+var property = require('property').property;
+var Class = require('class').Class;
+
+var One  = Class({
+  _var1: 1,
+
+  init: function() {
+    console.log('One.init');
+    property(this, 'var1', '_var1');
+    property(this, 'varA', function() { return this._var1 * 2; });
+  },
+  test: function() {
+    console.log('One.test: var1=', this.var1);
+    console.log('One.test: varA=', this.varA);
+  }
+});
+
+var Two = One.extend({
+  _var2: 2,
+  init: function() {
+    this.__super__();
+    console.log('Two.init');
+    property(this, 'var2', '_var2', true);
+    property(this, 'varB', function() { return this._var2 * 2; }, function(val) { this._var2 = val * 2; });
+  },
+  test: function() {
+    this.__super__();
+    console.log('Two.test: var1=', this.var1);
+    console.log('One.test: varA=', this.varA);
+    console.log('Two.test: var2=', this.var2);
+    console.log('One.test: varB=', this.varB);
+  }
+});
+
+function btn1_click() {
+	console.log('btn1');
+
+	var d = new Deferred();
+	d.addCallbacks(
+	  function(result) { alert(result.responseText); },
+	  function(error) { alert(error.statusText); }
+	);
+
+	ajax({
+	  method:'GET',
+	  url:'test.txt',
+	  async:true,
+	  callback:hitch(d, 'callback', [ 'abc' ]),
+	  errback:hitch(d, 'errback')
+	});
+}
+
+function btn2_click() {
+  var obj1 = new One();
+  var obj2 = new Two();
+  obj1.test();
+  obj2.test();
+}
+
+window.onload = function() {
+	document.getElementById('btn1').onclick = btn1_click;
+	document.getElementById('btn2').onclick = btn2_click;
+};
+</script>
+<style>
+</style>
+</head>
+<body>
+<h1>commonjs test page</h1>
+
+<div>
+<button id="btn1">ajax, deferred and hitch modules</button>
+<button id="btn2">class and property modules</button>
+
+<p>for more details, please visit <a href="http://commonjs.org/">commonjs</a></p>
+</div>
+</body>
+</html>
